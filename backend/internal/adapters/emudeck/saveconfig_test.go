@@ -231,7 +231,7 @@ func TestAzaharSDCard(t *testing.T) {
 		dir     string
 		problem bool
 	}{
-		"custom storage": {"[Data%20Storage]\nuse_custom_storage=true\nsdmc_directory=" + custom + "/\nuse_virtual_sd=true\n", custom, false},
+		"custom storage":  {"[Data%20Storage]\nuse_custom_storage=true\nsdmc_directory=" + custom + "/\nuse_virtual_sd=true\n", custom, false},
 		"default storage": {"[Data%20Storage]\nuse_custom_storage=false\nsdmc_directory=" + custom + "/\n", byDefault, false},
 		"no SD card":      {"[Data%20Storage]\nuse_virtual_sd=false\n", "", true},
 	}
@@ -260,5 +260,34 @@ func TestDolphinNAND(t *testing.T) {
 	put(t, filepath.Join(home, dolphinConfig), "[General]\nNANDRootPath = "+nand+"\n")
 	if got := NewSaveConfigs(home).SaveConfig("dolphin"); got.Dir != nand {
 		t.Fatalf("moved NAND: %+v", got)
+	}
+}
+
+// GameCube saves sync from a GCI folder in slot A: Dolphin's default, or the folder its settings
+// name; any other card in slot A stops them.
+func TestDolphinGCSlotA(t *testing.T) {
+	home := t.TempDir()
+	card := filepath.Join(home, "card")
+	if err := os.MkdirAll(card, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cases := map[string]struct {
+		config  string
+		dir     string
+		problem bool
+	}{
+		"default":    {"[Core]\n", "", false},
+		"GCI folder": {"[Core]\nSlotA = 8\n", "", false},
+		"raw card":   {"[Core]\nSlotA = 1\n", "", true},
+		"own folder": {"[Core]\nSlotA = 8\nGCIFolderAPathOverride = " + card + "\n", card, false},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			put(t, filepath.Join(home, dolphinConfig), c.config)
+			got := NewSaveConfigs(home).SaveConfig("dolphin-gc")
+			if got.Dir != c.dir || (got.Problem != "") != c.problem {
+				t.Fatalf("got %+v", got)
+			}
+		})
 	}
 }

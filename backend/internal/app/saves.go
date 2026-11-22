@@ -407,6 +407,8 @@ func (s *Saves) saveConfigs() map[string]domain.SaveConfig {
 	for _, r := range domain.SaveRules() {
 		out[r.Emulator.ID] = s.configs.SaveConfig(r.Emulator.ID)
 	}
+	// Dolphin's GameCube card settings stand apart from its Wii NAND's.
+	out["dolphin-gc"] = s.configs.SaveConfig("dolphin-gc")
 	return out
 }
 
@@ -428,6 +430,11 @@ func (s *Saves) watchDirs(configs []string) []string {
 					dirs = append(dirs, d)
 				}
 			}
+		}
+	}
+	for _, d := range s.gcWatchDirs(state) {
+		if !slices.Contains(dirs, d) {
+			dirs = append(dirs, d)
 		}
 	}
 	for _, r := range domain.SaveRules() {

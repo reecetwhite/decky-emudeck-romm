@@ -79,3 +79,22 @@ func WiiTitleDir(nand string, d DolphinDisc) string {
 
 // WiiSaveName is the name a Wii game's save goes by on RomM: its game ID, the same on every device.
 func WiiSaveName(d DolphinDisc) string { return d.ID + ".zip" }
+
+// GCRegionDir is the region folder Dolphin keeps a GameCube game's memory cards under, by the
+// region letter of its game ID. GameCube had no Korean region, so Dolphin uses Japan's for it.
+func GCRegionDir(d DolphinDisc) string {
+	switch d.ID[3] {
+	case 'E':
+		return "USA"
+	case 'J', 'K', 'W':
+		return "JAP"
+	}
+	return "EUR"
+}
+
+// GCIPrefix starts the name of every save file of the GameCube game d in a GCI folder: the maker
+// code and the title code, as Dolphin names them.
+func GCIPrefix(d DolphinDisc) string { return d.ID[4:6] + "-" + d.ID[:4] + "-" }
+
+// GCSaveName is the name a GameCube game's saves go by on RomM: its game ID.
+func GCSaveName(d DolphinDisc) string { return d.ID + ".zip" }

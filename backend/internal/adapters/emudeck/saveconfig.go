@@ -147,6 +147,16 @@ func (c *SaveConfigs) SaveConfig(id string) domain.SaveConfig {
 			}
 		}
 		return c.follow("Azahar", "saves", dir, "")
+	case "dolphin-gc":
+		core := readINI(filepath.Join(c.home, dolphinConfig))["Core"]
+		// EmuDeck leaves slot A on Dolphin's default, a GCI folder: a file per save. 8 is that.
+		if v := core["SlotA"]; v != "" && v != "8" {
+			return problem("Dolphin's memory card in slot A isn't a GCI folder, so GameCube saves don't sync. Set Config → GameCube → Slot A to \"GCI Folder\".")
+		}
+		// A folder named for slot A is the card itself, not the folder of region folders.
+		if dir := unquote(core["GCIFolderAPathOverride"]); dir != "" {
+			return c.follow("Dolphin", "GameCube saves", dir, "")
+		}
 	case "dolphin":
 		// Dolphin keeps the Wii NAND, and so Wii saves, in its user folder unless told otherwise.
 		if dir := unquote(readINI(filepath.Join(c.home, dolphinConfig))["General"]["NANDRootPath"]); dir != "" {

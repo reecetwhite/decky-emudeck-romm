@@ -482,7 +482,7 @@ func newDownloadFixture(t *testing.T, limit int) *downloadFixture {
 			{ID: 5, Slug: "dc", Name: "Dreamcast"}, {ID: 6, Slug: "dos", Name: "DOS"}, {ID: 7, Slug: "ps3", Name: "PlayStation 3"},
 			{ID: 8, Slug: "3ds", Name: "Nintendo 3DS"}, {ID: 9, Slug: "nds", Name: "Nintendo DS"}, {ID: 10, Slug: "gba", Name: "Game Boy Advance"},
 			{ID: 11, Slug: "n64", Name: "Nintendo 64"}, {ID: 12, Slug: "gbc", Name: "Game Boy Color"},
-			{ID: 13, Slug: "wii", Name: "Wii"}},
+			{ID: 13, Slug: "wii", Name: "Wii"}, {ID: 14, Slug: "ngc", Name: "GameCube"}},
 		ROMs: []domain.ROM{
 			{ID: 1, PlatformID: 1, Name: "Chrono Trigger", SizeBytes: int64(len(chrono))},
 			{ID: 2, PlatformID: 1, Name: "Super Metroid", SizeBytes: int64(len(metroid))},
@@ -503,7 +503,7 @@ func newDownloadFixture(t *testing.T, limit int) *downloadFixture {
 	}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	install := NewInstall(fixedProber{domain.InstallState{
-		EmuDeck: domain.EmuDeckState{Root: root, ROMsPath: filepath.Join(root, "roms")},
+		EmuDeck: domain.EmuDeckState{Root: root, ROMsPath: filepath.Join(root, "roms"), SavesPath: filepath.Join(root, "saves")},
 		ESDE: domain.ESDEState{
 			SettingsPath: filepath.Join(root, "es_settings.xml"), MediaDirectory: f.mediaDir,
 			ROMDirectory: filepath.Join(root, "roms"), ROMDirectoryMatches: true,
@@ -539,7 +539,8 @@ func newDownloadFixture(t *testing.T, limit int) *downloadFixture {
 			{Folder: "gba", ROMPath: filepath.Join(root, "roms", "gba"), Emulator: domain.RetroArchID},
 			{Folder: "n64", ROMPath: filepath.Join(root, "roms", "n64"), Emulator: domain.RetroArchID},
 			{Folder: "gbc", ROMPath: filepath.Join(root, "roms", "gbc"), Emulator: domain.RetroArchID},
-			{Folder: "wii", ROMPath: filepath.Join(root, "roms", "wii"), Emulator: "dolphin"}},
+			{Folder: "wii", ROMPath: filepath.Join(root, "roms", "wii"), Emulator: "dolphin"},
+			{Folder: "gc", ROMPath: filepath.Join(root, "roms", "gc"), Emulator: "dolphin"}},
 	}}, log)
 	conn, _ := newConnectionWithEvents(t, f.settings, &fakeNet{})
 	dial := func(domain.Server, string) DownloadServer { return f.server }

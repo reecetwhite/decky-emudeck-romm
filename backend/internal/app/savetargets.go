@@ -203,11 +203,21 @@ func (s *Saves) resolve(ctx context.Context, id int, shared bool) (saveTarget, s
 		t.path, t.format = filepath.Join(title, domain.CTRSaveName(id)), ctrSave(title)
 		return t, "", nil
 	case domain.SaveDolphin:
-		path, format, why := s.dolphinTarget(entry, system.Folder, saves)
+		path, format, why := s.dolphinTarget(state, entry, system.Folder, saves)
 		if why != "" {
 			return saveTarget{}, why, nil
 		}
 		t.path, t.format = path, format
+		if shared {
+			// The discs of a game on several, and its revisions, share a game ID and so a save.
+			owner, err := s.cardOwner(ctx, id, platformID, t.path)
+			if err != nil {
+				return saveTarget{}, "", err
+			}
+			if owner != "" {
+				return saveTarget{}, fmt.Sprintf("Dolphin keeps one save for every disc of this game, and it syncs with %s.", owner), nil
+			}
+		}
 		return t, "", nil
 	case domain.SaveN64Files:
 		base, why := s.n64Base(entry, saves)
