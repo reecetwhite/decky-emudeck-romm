@@ -26,6 +26,9 @@ const (
 	// SavePSXCard is a PlayStation memory card DuckStation names after the game's title in its game
 	// database, kept on RomM as is.
 	SavePSXCard
+	// SaveCTRTitle is a 3DS game's save folder on Azahar's SD card, found by the title ID in the
+	// game's header, kept on RomM as a zip of the folder.
+	SaveCTRTitle
 )
 
 // SaveRule is how an emulator whose saves sync names them and tags them on RomM. Each keeps a game's
@@ -42,6 +45,19 @@ type SaveRule struct {
 	// esdeVar is the variable ES-DE's commands run the emulator by, and label what its labels call
 	// the standalone emulator.
 	esdeVar, label string
+	// script is the launcher in EmuDeck's tools/launchers that runs the emulator. EmuDeck's own
+	// custom_systems give some systems, the 3DS's among them, a command running it in place of the
+	// emulator's variable.
+	script string
+}
+
+// runBy says whether an ES-DE command runs the rule's emulator: by its variable, or by EmuDeck's
+// launcher for it.
+func (r SaveRule) runBy(command string) bool {
+	if r.esdeVar != "" && strings.Contains(command, r.esdeVar) {
+		return true
+	}
+	return r.script != "" && strings.Contains(command, "/launchers/"+r.script)
 }
 
 var saveRules = func() []SaveRule {
@@ -58,6 +74,9 @@ var saveRules = func() []SaveRule {
 		}),
 		rule("duckstation", SaveRule{
 			Kind: SavePSXCard, Tag: "duckstation", esdeVar: "%EMULATOR_DUCKSTATION%", label: "DuckStation (Standalone)",
+		}),
+		rule("azahar", SaveRule{
+			Kind: SaveCTRTitle, Tag: "azahar", esdeVar: "%EMULATOR_AZAHAR%", label: "Azahar (Standalone)", script: "azahar.sh",
 		}),
 	}
 }()
@@ -79,7 +98,7 @@ func SaveRules() []SaveRule { return saveRules }
 // command when the launcher is Known, else by the label a gamelist named it with.
 func (l GameLauncher) SaveRule() (SaveRule, bool) {
 	for _, r := range saveRules {
-		if l.Known && strings.Contains(l.Command, r.esdeVar) || !l.Known && r.label != "" && strings.Contains(l.Label, r.label) {
+		if l.Known && r.runBy(l.Command) || !l.Known && r.label != "" && strings.Contains(l.Label, r.label) {
 			return r, true
 		}
 	}

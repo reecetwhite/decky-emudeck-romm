@@ -214,3 +214,34 @@ func TestSaveConfigFiles(t *testing.T) {
 		}
 	}
 }
+
+// Azahar's saves are on its SD card: the folder its custom storage names, else its default one, and
+// none when it has the SD card turned off.
+func TestAzaharSDCard(t *testing.T) {
+	home := t.TempDir()
+	custom := filepath.Join(home, "Emulation", "storage", "azahar", "sdmc")
+	byDefault := filepath.Join(home, azaharSDMC)
+	for _, d := range []string{custom, byDefault} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cases := map[string]struct {
+		config  string
+		dir     string
+		problem bool
+	}{
+		"custom storage": {"[Data%20Storage]\nuse_custom_storage=true\nsdmc_directory=" + custom + "/\nuse_virtual_sd=true\n", custom, false},
+		"default storage": {"[Data%20Storage]\nuse_custom_storage=false\nsdmc_directory=" + custom + "/\n", byDefault, false},
+		"no SD card":      {"[Data%20Storage]\nuse_virtual_sd=false\n", "", true},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			put(t, filepath.Join(home, azaharConfig), c.config)
+			got := NewSaveConfigs(home).SaveConfig("azahar")
+			if got.Dir != c.dir || (got.Problem != "") != c.problem {
+				t.Fatalf("got %+v", got)
+			}
+		})
+	}
+}

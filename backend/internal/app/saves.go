@@ -416,6 +416,19 @@ func (s *Saves) watchDirs(configs []string) []string {
 	state := s.install.State(false)
 	dirs := s.saveDirs(state)
 	for _, r := range domain.SaveRules() {
+		// The 3DS keeps each title's save folders deep under the SD card; the watch covers each.
+		if r.Kind != domain.SaveCTRTitle {
+			continue
+		}
+		if dir, why := s.saveDir(state, r.Emulator); why == "" {
+			for _, d := range ctrWatchDirs(dir) {
+				if !slices.Contains(dirs, d) {
+					dirs = append(dirs, d)
+				}
+			}
+		}
+	}
+	for _, r := range domain.SaveRules() {
 		if dir, why := s.stateDir(state, r.Emulator); why == "" && !slices.Contains(dirs, dir) {
 			if info, err := os.Stat(dir); err == nil && info.IsDir() {
 				dirs = append(dirs, dir)
@@ -459,7 +472,7 @@ func (s *Saves) saveWritten(ctx context.Context, path string) {
 		return
 	}
 	for _, id := range ids {
-		if t, why, err := s.target(ctx, id); err == nil && why == "" && slices.Contains(t.format.files(), path) {
+		if t, why, err := s.target(ctx, id); err == nil && why == "" && formatOwns(t.format, path) {
 			// A write that leaves the save as it last synced, the plugin's own download included
 			// however late the watch reports it, has nothing to upload.
 			if r, ok := records[id]; ok && r.Path == t.path && r.Slot == t.slot && r.LocalHash != "" {

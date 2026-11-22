@@ -50,7 +50,7 @@ var Emulators = []Emulator{
 	{ID: "pcsx2", Name: "PCSX2", Kind: InstallAppImage, Location: "pcsx2-Qt.AppImage"},
 	{ID: "armsx2", Name: "ARMSX2", Kind: InstallAppImage, Location: "armsx2.AppImage"},
 	{ID: "rpcs3", Name: "RPCS3", Kind: InstallAppImage, Location: "rpcs3.AppImage"},
-	{ID: "azahar", Name: "Azahar", Kind: InstallAppImage, Location: "azahar.AppImage"},
+	{ID: "azahar", Name: "Azahar", Kind: InstallAppImage, Location: "azahar.AppImage", SaveDirs: []string{"azahar/saves"}},
 	{ID: "cemu", Name: "Cemu", Kind: InstallAppImage, Location: "Cemu.AppImage"},
 	{ID: "shadps4", Name: "shadPS4", Kind: InstallAppImage, Location: "Shadps4-qt.AppImage"},
 	{ID: "mgba", Name: "mGBA", Kind: InstallAppImage, Location: "mGBA.AppImage", SaveDirs: []string{"mgba/saves", "mgba/states"}},

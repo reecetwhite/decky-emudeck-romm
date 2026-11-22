@@ -3,8 +3,10 @@ package emudeck
 import (
 	"bufio"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -24,6 +26,9 @@ const (
 	melonDSConfig   = ".var/app/net.kuribo64.melonDS/config/melonDS"
 	mGBAConfig      = ".config/mgba/config.ini"
 	rmgConfig       = ".var/app/com.github.Rosalie241.RMG/config/RMG/mupen64plus.cfg"
+	azaharConfig    = ".config/azahar-emu/qt-config.ini"
+	// azaharSDMC is where Azahar keeps its SD card when its settings don't name another.
+	azaharSDMC = ".local/share/azahar-emu/sdmc"
 )
 
 // Files are the settings files SaveConfig reads, of every emulator whose saves sync.
@@ -35,6 +40,7 @@ func (c *SaveConfigs) Files() []string {
 		filepath.Join(c.home, mGBAConfig),
 		filepath.Join(c.home, rmgConfig),
 		filepath.Join(c.home, duckStationData, "settings.ini"),
+		filepath.Join(c.home, azaharConfig),
 	}
 }
 
@@ -122,6 +128,23 @@ func (c *SaveConfigs) SaveConfig(id string) domain.SaveConfig {
 		// DuckStation keeps cards in memcards under its data folder unless told otherwise, and reads
 		// a relative folder from there too.
 		return c.follow("DuckStation", "saves", orDefault(cards["Directory"], "memcards"), data)
+	case "azahar":
+		path := filepath.Join(c.home, azaharConfig)
+		if !isFile(path) {
+			break
+		}
+		data := iniKeys(readINI(path))
+		// Games save to the SD card only when Azahar emulates one.
+		if v := data["use_virtual_sd"]; strings.EqualFold(v, "false") || v == "0" {
+			return problem("Azahar has its SD card turned off, so games can't save to it and their saves don't sync. Turn on Emulation → Configure → System → \"Use virtual SD card\".")
+		}
+		dir := filepath.Join(c.home, azaharSDMC)
+		if custom := data["use_custom_storage"]; strings.EqualFold(custom, "true") || custom == "1" {
+			if d := strings.TrimSuffix(unquote(data["sdmc_directory"]), "/"); d != "" {
+				dir = d
+			}
+		}
+		return c.follow("Azahar", "saves", dir, "")
 	}
 	return domain.SaveConfig{}
 }
@@ -175,6 +198,20 @@ func (c *SaveConfigs) StateConfig(id string) domain.SaveConfig {
 		}
 	}
 	return domain.SaveConfig{}
+}
+
+// iniKeys merges an INI file's sections' keys, the first section by name to set one winning: Azahar
+// keeps each setting under a section of its own, under names no two of its sections share.
+func iniKeys(ini map[string]map[string]string) map[string]string {
+	out := map[string]string{}
+	for _, section := range slices.Sorted(maps.Keys(ini)) {
+		for k, v := range ini[section] {
+			if _, ok := out[k]; !ok {
+				out[k] = v
+			}
+		}
+	}
+	return out
 }
 
 func problem(why string) domain.SaveConfig { return domain.SaveConfig{Problem: why} }

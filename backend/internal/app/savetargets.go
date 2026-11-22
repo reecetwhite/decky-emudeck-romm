@@ -194,6 +194,14 @@ func (s *Saves) resolve(ctx context.Context, id int, shared bool) (saveTarget, s
 			}
 		}
 		return t, "", nil
+	case domain.SaveCTRTitle:
+		title, id, why := s.ctrTarget(entry, saves)
+		if why != "" {
+			return saveTarget{}, why, nil
+		}
+		// RomM keeps the data folder as one zip, named for the title.
+		t.path, t.format = filepath.Join(title, domain.CTRSaveName(id)), ctrSave{title: title}
+		return t, "", nil
 	case domain.SaveN64Files:
 		base, why := s.n64Base(entry, saves)
 		if why != "" {
