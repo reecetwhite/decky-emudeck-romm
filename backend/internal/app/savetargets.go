@@ -39,6 +39,11 @@ type PSXDiscs interface {
 	Disc(path string) (domain.PSXDisc, error)
 }
 
+// PS2Discs read PlayStation 2 discs for what they boot.
+type PS2Discs interface {
+	SystemCNF(path string) ([]byte, error)
+}
+
 // DuckStationGames are what DuckStation names memory cards after: its game database, and the
 // titles and settings the user gave games.
 type DuckStationGames interface {
@@ -54,6 +59,7 @@ type SaveSources struct {
 	Configs     SaveConfigs
 	N64         N64Database
 	PSX         PSXDiscs
+	PS2         PS2Discs
 	DuckStation DuckStationGames
 	// States is how save states sync; nil leaves domain.DefaultStateSettings.
 	States StateSettingsStore
@@ -216,6 +222,23 @@ func (s *Saves) resolve(ctx context.Context, id int, shared bool) (saveTarget, s
 			}
 			if owner != "" {
 				return saveTarget{}, fmt.Sprintf("Dolphin keeps one save for every disc of this game, and it syncs with %s.", owner), nil
+			}
+		}
+		return t, "", nil
+	case domain.SavePS2Folder:
+		path, format, why := s.ps2Target(entry, saves)
+		if why != "" {
+			return saveTarget{}, why, nil
+		}
+		t.path, t.format = path, format
+		if shared {
+			// A game's discs, and its revisions, share a serial and so their saves.
+			owner, err := s.cardOwner(ctx, id, platformID, t.path)
+			if err != nil {
+				return saveTarget{}, "", err
+			}
+			if owner != "" {
+				return saveTarget{}, fmt.Sprintf("PCSX2 keeps this game's saves under the same serial as %s's, and they sync with it.", owner), nil
 			}
 		}
 		return t, "", nil

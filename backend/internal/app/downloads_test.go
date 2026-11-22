@@ -482,7 +482,7 @@ func newDownloadFixture(t *testing.T, limit int) *downloadFixture {
 			{ID: 5, Slug: "dc", Name: "Dreamcast"}, {ID: 6, Slug: "dos", Name: "DOS"}, {ID: 7, Slug: "ps3", Name: "PlayStation 3"},
 			{ID: 8, Slug: "3ds", Name: "Nintendo 3DS"}, {ID: 9, Slug: "nds", Name: "Nintendo DS"}, {ID: 10, Slug: "gba", Name: "Game Boy Advance"},
 			{ID: 11, Slug: "n64", Name: "Nintendo 64"}, {ID: 12, Slug: "gbc", Name: "Game Boy Color"},
-			{ID: 13, Slug: "wii", Name: "Wii"}, {ID: 14, Slug: "ngc", Name: "GameCube"}},
+			{ID: 13, Slug: "wii", Name: "Wii"}, {ID: 14, Slug: "ngc", Name: "GameCube"}, {ID: 15, Slug: "ps2", Name: "PlayStation 2"}},
 		ROMs: []domain.ROM{
 			{ID: 1, PlatformID: 1, Name: "Chrono Trigger", SizeBytes: int64(len(chrono))},
 			{ID: 2, PlatformID: 1, Name: "Super Metroid", SizeBytes: int64(len(metroid))},
@@ -527,6 +527,8 @@ func newDownloadFixture(t *testing.T, limit int) *downloadFixture {
 			{Path: filepath.Join(root, "saves", "azahar", "saves"), Resolved: filepath.Join(root, "saves", "azahar", "saves")},
 		}}, {ID: "dolphin", Installed: true, Saves: []domain.SaveDirState{
 			{Path: filepath.Join(root, "saves", "dolphin", "Wii"), Resolved: filepath.Join(root, "saves", "dolphin", "Wii")},
+		}}, {ID: "pcsx2", Installed: true, Saves: []domain.SaveDirState{
+			{Path: filepath.Join(root, "saves", "pcsx2", "saves"), Resolved: filepath.Join(root, "saves", "pcsx2", "saves")},
 		}}},
 		Systems: []domain.SystemState{{Folder: "snes", ROMPath: f.snes, Emulator: domain.RetroArchID},
 			{Folder: "psx", ROMPath: filepath.Join(root, "roms", "psx"), Emulator: "duckstation"},
@@ -540,7 +542,8 @@ func newDownloadFixture(t *testing.T, limit int) *downloadFixture {
 			{Folder: "n64", ROMPath: filepath.Join(root, "roms", "n64"), Emulator: domain.RetroArchID},
 			{Folder: "gbc", ROMPath: filepath.Join(root, "roms", "gbc"), Emulator: domain.RetroArchID},
 			{Folder: "wii", ROMPath: filepath.Join(root, "roms", "wii"), Emulator: "dolphin"},
-			{Folder: "gc", ROMPath: filepath.Join(root, "roms", "gc"), Emulator: "dolphin"}},
+			{Folder: "gc", ROMPath: filepath.Join(root, "roms", "gc"), Emulator: "dolphin"},
+			{Folder: "ps2", ROMPath: filepath.Join(root, "roms", "ps2"), Emulator: "pcsx2"}},
 	}}, log)
 	conn, _ := newConnectionWithEvents(t, f.settings, &fakeNet{})
 	dial := func(domain.Server, string) DownloadServer { return f.server }

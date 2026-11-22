@@ -32,6 +32,9 @@ const (
 	// SaveDolphin is a save Dolphin keeps, by the game ID in the disc's header: a Wii game's save
 	// folder in the NAND, kept on RomM as a zip of the folder.
 	SaveDolphin
+	// SavePS2Folder is a PS2 game's save folders on PCSX2's folder memory card, found by the serial
+	// on the game's disc, kept on RomM as a zip of them.
+	SavePS2Folder
 )
 
 // SaveRule is how an emulator whose saves sync names them and tags them on RomM. Each keeps a game's
@@ -83,6 +86,9 @@ var saveRules = func() []SaveRule {
 		}),
 		rule("dolphin", SaveRule{
 			Kind: SaveDolphin, Tag: "dolphin", esdeVar: "%EMULATOR_DOLPHIN%", label: "Dolphin (Standalone)", script: "dolphin-emu.sh",
+		}),
+		rule("pcsx2", SaveRule{
+			Kind: SavePS2Folder, Tag: "pcsx2", esdeVar: "%EMULATOR_PCSX2%", label: "PCSX2 (Standalone)", script: "pcsx2-qt.sh",
 		}),
 	}
 }()

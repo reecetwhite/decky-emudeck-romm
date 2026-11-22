@@ -28,6 +28,7 @@ const (
 	rmgConfig       = ".var/app/com.github.Rosalie241.RMG/config/RMG/mupen64plus.cfg"
 	azaharConfig    = ".config/azahar-emu/qt-config.ini"
 	dolphinConfig   = ".var/app/org.DolphinEmu.dolphin-emu/config/dolphin-emu/Dolphin.ini"
+	pcsx2Data       = ".config/PCSX2"
 	// azaharSDMC is where Azahar keeps its SD card when its settings don't name another.
 	azaharSDMC = ".local/share/azahar-emu/sdmc"
 )
@@ -43,6 +44,7 @@ func (c *SaveConfigs) Files() []string {
 		filepath.Join(c.home, duckStationData, "settings.ini"),
 		filepath.Join(c.home, azaharConfig),
 		filepath.Join(c.home, dolphinConfig),
+		filepath.Join(c.home, pcsx2Data, "inis", "PCSX2.ini"),
 	}
 }
 
@@ -147,6 +149,28 @@ func (c *SaveConfigs) SaveConfig(id string) domain.SaveConfig {
 			}
 		}
 		return c.follow("Azahar", "saves", dir, "")
+	case "pcsx2":
+		path := filepath.Join(c.home, pcsx2Data, "inis", "PCSX2.ini")
+		if !isFile(path) {
+			// EmuDeck's saves folder is where the cards are, not the card itself.
+			return problem("PCSX2's settings weren't found, so which memory card it uses can't be told. Set PCSX2 up in EmuDeck.")
+		}
+		ini := readINI(path)
+		cards := ini["MemoryCards"]
+		if v := cards["Slot1_Enable"]; strings.EqualFold(v, "false") {
+			return problem("PCSX2 has no memory card in slot 1, so PS2 saves don't sync. Turn slot 1 on in Settings → Memory Cards.")
+		}
+		// PCSX2 keeps cards in memcards under its data folder unless told otherwise, and reads a
+		// relative folder from there too.
+		dir := orDefault(unquote(ini["Folders"]["MemoryCards"]), "memcards")
+		if !filepath.IsAbs(expandHome(dir, c.home)) {
+			dir = filepath.Join(c.home, pcsx2Data, dir)
+		}
+		card := filepath.Join(expandHome(dir, c.home), orDefault(unquote(cards["Slot1_Filename"]), "Mcd001.ps2"))
+		if info, err := os.Stat(card); err == nil && !info.IsDir() {
+			return problem("PCSX2's memory card in slot 1 is a single file shared by every game, so PS2 saves don't sync. Make a Folder memory card in Settings → Memory Cards and put it in slot 1.")
+		}
+		return c.follow("PCSX2", "folder memory card", card, "")
 	case "dolphin-gc":
 		core := readINI(filepath.Join(c.home, dolphinConfig))["Core"]
 		// EmuDeck leaves slot A on Dolphin's default, a GCI folder: a file per save. 8 is that.

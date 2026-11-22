@@ -248,3 +248,22 @@ func itoa(n int) string {
 		}
 	}
 }
+
+// A PS2 .iso is read for its SYSTEM.CNF as 2048-byte sectors, even when its size happens to be a
+// whole number of raw CD sectors, which a lone .bin of that size would be read as.
+func TestPS2SystemCNF(t *testing.T) {
+	cnf := []byte("BOOT2 = cdrom0:\\SCUS_972.68;1\r\nVER = 2.00\r\n")
+	img := isoImage(map[string][]byte{"SYSTEM.CNF": cnf})
+	// Pad to the first size that's a multiple of both 2048 and 2352.
+	for len(img)%2352 != 0 {
+		img = append(img, make([]byte, 2048)...)
+	}
+	dir := t.TempDir()
+	got, err := Discs{}.SystemCNF(write(t, filepath.Join(dir, "Going Commando.iso"), img))
+	if err != nil || domain.PS2Serial(got) != "SCUS-97268" {
+		t.Fatalf("got %q, %v", got, err)
+	}
+	if _, err := (Discs{}).SystemCNF(write(t, filepath.Join(dir, "raw.bin"), raw(img, 2))); err != nil {
+		t.Fatalf("raw: %v", err)
+	}
+}

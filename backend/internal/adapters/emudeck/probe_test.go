@@ -183,8 +183,9 @@ func TestEmulatorFollowsArch(t *testing.T) {
 			t.Errorf("%s: ps2 emulator %s, want %s", arch, got, want)
 		}
 		for _, e := range s.Emulators {
-			if e.ID == "pcsx2" && arch == "arm64" || e.ID == "armsx2" && arch == "amd64" {
-				t.Errorf("%s lists %s", arch, e.ID)
+			// PCSX2's saves sync, so it's listed everywhere, but on arm64 it runs no system.
+			if e.ID == "pcsx2" && arch == "arm64" && len(e.Systems) > 0 || e.ID == "armsx2" && arch == "amd64" {
+				t.Errorf("%s lists %s for %v", arch, e.ID, e.Systems)
 			}
 		}
 	}

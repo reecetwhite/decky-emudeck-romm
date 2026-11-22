@@ -162,6 +162,7 @@ type Saves struct {
 	states      StateSettingsStore
 	n64db       N64Database
 	psx         PSXDiscs
+	ps2         PS2Discs
 	duckstation DuckStationGames
 	running     RunningGame
 	backups     string
@@ -217,7 +218,7 @@ func NewSaves(ctx context.Context, catalog CatalogStore, install *Install, conn 
 ) *Saves {
 	return &Saves{
 		catalog: catalog, install: install, conn: conn, dial: dial, owned: owned, store: store, problem: problem,
-		launchers: sources.Launchers, configs: sources.Configs, states: sources.States, n64db: sources.N64, psx: sources.PSX, duckstation: sources.DuckStation,
+		launchers: sources.Launchers, configs: sources.Configs, states: sources.States, n64db: sources.N64, psx: sources.PSX, ps2: sources.PS2, duckstation: sources.DuckStation,
 		running: running, backups: backups, onChange: onChange, log: log, now: time.Now, base: ctx, reads: map[string]cachedRead{},
 		pullEvery: savePullEvery, settle: saveSettle, pollEvery: savePoll, openGap: saveOpenGap,
 		pending: map[int]bool{}, current: map[int]bool{}, wrote: map[string]time.Time{}, waits: true,
@@ -418,9 +419,9 @@ func (s *Saves) watchDirs(configs []string) []string {
 	state := s.install.State(false)
 	dirs := s.saveDirs(state)
 	for _, r := range domain.SaveRules() {
-		// The 3DS and Wii keep each title's save folder deep under the saves folder; the watch
+		// The 3DS, Wii and PS2 keep each game's save folder deep under the saves folder; the watch
 		// covers each.
-		deep := map[domain.SaveKind]func(string) []string{domain.SaveCTRTitle: ctrWatchDirs, domain.SaveDolphin: wiiWatchDirs}[r.Kind]
+		deep := map[domain.SaveKind]func(string) []string{domain.SaveCTRTitle: ctrWatchDirs, domain.SaveDolphin: wiiWatchDirs, domain.SavePS2Folder: ps2WatchDirs}[r.Kind]
 		if deep == nil {
 			continue
 		}

@@ -391,6 +391,7 @@ type saveFixture struct {
 	configs   fakeConfigs
 	n64db     fakeN64Database
 	psx       fakePSXDiscs
+	ps2       fakePS2Discs
 	duck      fakeDuckStation
 	stateSet  *memStateSettings
 	saves     *Saves
@@ -415,6 +416,7 @@ func newSaveFixture(t *testing.T) *saveFixture {
 		configs:         fakeConfigs{},
 		n64db:           fakeN64Database{},
 		psx:             fakePSXDiscs{},
+		ps2:             fakePS2Discs{},
 		duck:            fakeDuckStation{},
 		stateSet:        &memStateSettings{set: domain.DefaultStateSettings},
 		events:          make(chan SaveSyncEvent, 256),
@@ -432,7 +434,7 @@ func newSaveFixture(t *testing.T) *saveFixture {
 func (f *saveFixture) newSaves() *Saves {
 	d := f.downloads
 	s := NewSaves(context.Background(), d.catalog, d.install, d.conn, func(domain.Server, string) SaveServer { return f.romm },
-		f.owned, f.store, nil, SaveSources{Launchers: f.launchers, Configs: f.configs, N64: f.n64db, PSX: f.psx, DuckStation: f.duck, States: f.stateSet}, func() (domain.Emulator, bool) {
+		f.owned, f.store, nil, SaveSources{Launchers: f.launchers, Configs: f.configs, N64: f.n64db, PSX: f.psx, PS2: f.ps2, DuckStation: f.duck, States: f.stateSet}, func() (domain.Emulator, bool) {
 			if f.retroarch.Load() {
 				return domain.EmulatorByID(domain.RetroArchID)
 			}

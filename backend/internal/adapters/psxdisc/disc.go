@@ -43,6 +43,44 @@ func (Discs) Disc(path string) (domain.PSXDisc, error) {
 	return identify(t)
 }
 
+// SystemCNF reads SYSTEM.CNF off the disc at path, a .cue, .bin, .img, .iso or .chd, or an .m3u
+// whose first disc is one: a PlayStation 2 disc's names what it boots, and so its serial.
+func (Discs) SystemCNF(path string) ([]byte, error) {
+	t, err := openPS2(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = t.close() }()
+	if t.audio {
+		return nil, errors.New("the disc starts with an audio track")
+	}
+	pvd, err := t.sector(16)
+	if err != nil {
+		return nil, fmt.Errorf("read the volume descriptor: %w", err)
+	}
+	if !isPVD(pvd) {
+		return nil, errors.New("the disc has no ISO 9660 filesystem")
+	}
+	cnf, err := readFile(t, pvd, "SYSTEM.CNF")
+	if err != nil {
+		return nil, fmt.Errorf("read SYSTEM.CNF: %w", err)
+	}
+	return cnf, nil
+}
+
+// openPS2 opens a PS2 disc. An .iso of one is a DVD's 2048-byte sectors, which openBin could take
+// for raw CD sectors when its size happens to fit them; anything else opens as a PlayStation disc.
+func openPS2(path string) (*track1, error) {
+	if !strings.EqualFold(filepath.Ext(path), ".iso") {
+		return open(path, 0)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	return fileTrack(path, 0, mode{size: 2048}, uint32(info.Size()/2048)+pregap)
+}
+
 // track1 is a disc's first track: its user data sector by sector, and its length in sectors,
 // pregap included, as DuckStation counts it.
 type track1 struct {

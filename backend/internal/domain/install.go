@@ -47,7 +47,7 @@ var Emulators = []Emulator{
 	{ID: "supermodel", Name: "Supermodel", Kind: InstallFlatpak, Location: "com.supermodel3.Supermodel"},
 	{ID: "rmg", Name: "RMG", Kind: InstallFlatpak, Location: "com.github.Rosalie241.RMG", SaveDirs: []string{"RMG/saves", "RMG/states"}},
 	{ID: "duckstation", Name: "DuckStation", Kind: InstallAppImage, Location: "DuckStation.AppImage", SaveDirs: []string{"duckstation/saves", "duckstation/states"}},
-	{ID: "pcsx2", Name: "PCSX2", Kind: InstallAppImage, Location: "pcsx2-Qt.AppImage"},
+	{ID: "pcsx2", Name: "PCSX2", Kind: InstallAppImage, Location: "pcsx2-Qt.AppImage", SaveDirs: []string{"pcsx2/saves"}},
 	{ID: "armsx2", Name: "ARMSX2", Kind: InstallAppImage, Location: "armsx2.AppImage"},
 	{ID: "rpcs3", Name: "RPCS3", Kind: InstallAppImage, Location: "rpcs3.AppImage"},
 	{ID: "azahar", Name: "Azahar", Kind: InstallAppImage, Location: "azahar.AppImage", SaveDirs: []string{"azahar/saves"}},

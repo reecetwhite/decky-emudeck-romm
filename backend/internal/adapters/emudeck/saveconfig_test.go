@@ -291,3 +291,36 @@ func TestDolphinGCSlotA(t *testing.T) {
 		})
 	}
 }
+
+// PS2 saves sync from a folder memory card in slot 1; a single-file card, or none, stops them.
+func TestPCSX2Card(t *testing.T) {
+	home := t.TempDir()
+	cards := filepath.Join(home, "memcards")
+	folder := filepath.Join(cards, "Mcd001.ps2")
+	if err := os.MkdirAll(folder, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	put(t, filepath.Join(cards, "Mcd002.ps2"), "a file card")
+	ini := filepath.Join(home, pcsx2Data, "inis", "PCSX2.ini")
+	if got := NewSaveConfigs(home).SaveConfig("pcsx2"); got.Problem == "" {
+		t.Fatalf("no settings: %+v", got)
+	}
+	cases := map[string]struct {
+		config  string
+		dir     string
+		problem bool
+	}{
+		"folder card": {"[Folders]\nMemoryCards = " + cards + "\n[MemoryCards]\nSlot1_Enable = true\nSlot1_Filename = Mcd001.ps2\n", folder, false},
+		"file card":   {"[Folders]\nMemoryCards = " + cards + "\n[MemoryCards]\nSlot1_Filename = Mcd002.ps2\n", "", true},
+		"no slot 1":   {"[MemoryCards]\nSlot1_Enable = false\n", "", true},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			put(t, ini, c.config)
+			got := NewSaveConfigs(home).SaveConfig("pcsx2")
+			if got.Dir != c.dir || (got.Problem != "") != c.problem {
+				t.Fatalf("got %+v", got)
+			}
+		})
+	}
+}

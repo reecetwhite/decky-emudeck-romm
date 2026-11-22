@@ -75,7 +75,8 @@ func TestRunWatchesSaveFolders(t *testing.T) {
 	f.run(t, w)
 	want := []string{f.raSaves, filepath.Join(f.root, "saves", "melonds", "saves"), filepath.Join(f.root, "saves", "mgba", "saves"),
 		filepath.Join(f.root, "saves", "RMG", "saves"), filepath.Join(f.root, "saves", "duckstation", "saves"),
-		filepath.Join(f.root, "saves", "azahar", "saves"), filepath.Join(f.root, "saves", "dolphin", "Wii")}
+		filepath.Join(f.root, "saves", "azahar", "saves"), filepath.Join(f.root, "saves", "dolphin", "Wii"),
+		filepath.Join(f.root, "saves", "pcsx2", "saves")}
 	if dirs := <-w.dirs; !slices.Equal(dirs, want) {
 		t.Fatalf("watching %v", dirs)
 	}
