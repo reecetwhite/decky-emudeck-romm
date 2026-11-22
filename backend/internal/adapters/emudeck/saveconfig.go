@@ -3,9 +3,11 @@ package emudeck
 import (
 	"bufio"
 	"fmt"
+	"html"
 	"maps"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -29,6 +31,7 @@ const (
 	azaharConfig    = ".config/azahar-emu/qt-config.ini"
 	dolphinConfig   = ".var/app/org.DolphinEmu.dolphin-emu/config/dolphin-emu/Dolphin.ini"
 	pcsx2Data       = ".config/PCSX2"
+	cemuConfig      = ".config/Cemu/settings.xml"
 	// azaharSDMC is where Azahar keeps its SD card when its settings don't name another.
 	azaharSDMC = ".local/share/azahar-emu/sdmc"
 )
@@ -45,6 +48,7 @@ func (c *SaveConfigs) Files() []string {
 		filepath.Join(c.home, azaharConfig),
 		filepath.Join(c.home, dolphinConfig),
 		filepath.Join(c.home, pcsx2Data, "inis", "PCSX2.ini"),
+		filepath.Join(c.home, cemuConfig),
 	}
 }
 
@@ -171,6 +175,15 @@ func (c *SaveConfigs) SaveConfig(id string) domain.SaveConfig {
 			return problem("PCSX2's memory card in slot 1 is a single file shared by every game, so PS2 saves don't sync. Make a Folder memory card in Settings → Memory Cards and put it in slot 1.")
 		}
 		return c.follow("PCSX2", "folder memory card", card, "")
+	case "cemu":
+		// Cemu keeps saves in its MLC's usr/save; its settings name the MLC unless it's the default.
+		data, err := os.ReadFile(filepath.Join(c.home, cemuConfig))
+		if err != nil {
+			break
+		}
+		if m := cemuMLC.FindSubmatch(data); m != nil && strings.TrimSpace(string(m[1])) != "" {
+			return c.follow("Cemu", "saves", filepath.Join(html.UnescapeString(strings.TrimSpace(string(m[1]))), "usr", "save"), "")
+		}
 	case "dolphin-gc":
 		core := readINI(filepath.Join(c.home, dolphinConfig))["Core"]
 		// EmuDeck leaves slot A on Dolphin's default, a GCI folder: a file per save. 8 is that.
@@ -240,6 +253,8 @@ func (c *SaveConfigs) StateConfig(id string) domain.SaveConfig {
 	}
 	return domain.SaveConfig{}
 }
+
+var cemuMLC = regexp.MustCompile(`<mlc_path>([^<]*)</mlc_path>`)
 
 // iniKeys merges an INI file's sections' keys, the first section by name to set one winning: Azahar
 // keeps each setting under a section of its own, under names no two of its sections share.

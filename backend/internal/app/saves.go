@@ -419,9 +419,9 @@ func (s *Saves) watchDirs(configs []string) []string {
 	state := s.install.State(false)
 	dirs := s.saveDirs(state)
 	for _, r := range domain.SaveRules() {
-		// The 3DS, Wii and PS2 keep each game's save folder deep under the saves folder; the watch
+		// The 3DS, Wii, PS2 and Wii U keep each game's save folder deep under the saves folder; the watch
 		// covers each.
-		deep := map[domain.SaveKind]func(string) []string{domain.SaveCTRTitle: ctrWatchDirs, domain.SaveDolphin: wiiWatchDirs, domain.SavePS2Folder: ps2WatchDirs}[r.Kind]
+		deep := map[domain.SaveKind]func(string) []string{domain.SaveCTRTitle: ctrWatchDirs, domain.SaveDolphin: wiiWatchDirs, domain.SavePS2Folder: ps2WatchDirs, domain.SaveWiiUTitle: wiiuWatchDirs}[r.Kind]
 		if deep == nil {
 			continue
 		}

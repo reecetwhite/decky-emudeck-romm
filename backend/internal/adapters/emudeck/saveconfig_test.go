@@ -324,3 +324,19 @@ func TestPCSX2Card(t *testing.T) {
 		})
 	}
 }
+
+// Cemu's saves are in its MLC's usr/save, the MLC its settings name.
+func TestCemuMLC(t *testing.T) {
+	home := t.TempDir()
+	mlc := filepath.Join(home, "Emulation", "roms", "wiiu", "mlc01")
+	if err := os.MkdirAll(filepath.Join(mlc, "usr", "save"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if got := NewSaveConfigs(home).SaveConfig("cemu"); got != (domain.SaveConfig{}) {
+		t.Fatalf("no settings: %+v", got)
+	}
+	put(t, filepath.Join(home, cemuConfig), "<content>\n  <mlc_path>"+mlc+"</mlc_path>\n</content>\n")
+	if got := NewSaveConfigs(home).SaveConfig("cemu"); got.Dir != filepath.Join(mlc, "usr", "save") {
+		t.Fatalf("got %+v", got)
+	}
+}

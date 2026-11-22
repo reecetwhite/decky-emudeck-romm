@@ -35,6 +35,9 @@ const (
 	// SavePS2Folder is a PS2 game's save folders on PCSX2's folder memory card, found by the serial
 	// on the game's disc, kept on RomM as a zip of them.
 	SavePS2Folder
+	// SaveWiiUTitle is a Wii U game's save folder in Cemu's MLC, found by the game's title ID, kept
+	// on RomM as a zip of the folder.
+	SaveWiiUTitle
 )
 
 // SaveRule is how an emulator whose saves sync names them and tags them on RomM. Each keeps a game's
@@ -89,6 +92,9 @@ var saveRules = func() []SaveRule {
 		}),
 		rule("pcsx2", SaveRule{
 			Kind: SavePS2Folder, Tag: "pcsx2", esdeVar: "%EMULATOR_PCSX2%", label: "PCSX2 (Standalone)", script: "pcsx2-qt.sh",
+		}),
+		rule("cemu", SaveRule{
+			Kind: SaveWiiUTitle, Tag: "cemu", esdeVar: "%EMULATOR_CEMU%", label: "Cemu (Standalone)", script: "cemu.sh",
 		}),
 	}
 }()

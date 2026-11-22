@@ -242,6 +242,13 @@ func (s *Saves) resolve(ctx context.Context, id int, shared bool) (saveTarget, s
 			}
 		}
 		return t, "", nil
+	case domain.SaveWiiUTitle:
+		path, format, why := s.wiiuTarget(entry, saves)
+		if why != "" {
+			return saveTarget{}, why, nil
+		}
+		t.path, t.format = path, format
+		return t, "", nil
 	case domain.SaveN64Files:
 		base, why := s.n64Base(entry, saves)
 		if why != "" {
