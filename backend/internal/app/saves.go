@@ -604,6 +604,11 @@ func (s *Saves) Paused() []PausedEmulator {
 		}
 		if cfg := s.configs.SaveConfig(r.Emulator.ID); cfg.Problem != "" {
 			out = append(out, PausedEmulator{Emulator: r.Emulator, Why: cfg.Problem})
+		} else if r.Kind == domain.SaveDolphin {
+			// Dolphin's GameCube card can stop GameCube saves while Wii saves still sync.
+			if gc := s.configs.SaveConfig("dolphin-gc"); gc.Problem != "" {
+				out = append(out, PausedEmulator{Emulator: r.Emulator, Why: gc.Problem})
+			}
 		}
 	}
 	return out

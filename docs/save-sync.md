@@ -10,17 +10,46 @@ Saves sync for games the plugin downloaded, and for games you've linked to RomM 
 [Managing games](managing-games.md#games-you-already-have)), when they're played in one of these
 emulators:
 
-| Emulator    | Systems (EmuDeck's defaults)                    | Save                       |
-| ----------- | ----------------------------------------------- | -------------------------- |
-| RetroArch   | Most cartridge and classic systems, N64, GBA    | `.srm` battery save        |
-| melonDS     | Nintendo DS                                     | `.sav` battery save        |
-| mGBA        | Game Boy Advance, when ES-DE runs it standalone | `.sav` battery save        |
-| RMG         | Nintendo 64, when ES-DE runs it                 | N64 save files, as one zip |
-| DuckStation | PlayStation                                     | The game's memory card     |
+| Emulator    | Systems (EmuDeck's defaults)                    | Save                                         |
+| ----------- | ----------------------------------------------- | -------------------------------------------- |
+| RetroArch   | Most cartridge and classic systems, N64, GBA    | `.srm` battery save                          |
+| melonDS     | Nintendo DS                                     | `.sav` battery save                          |
+| mGBA        | Game Boy Advance, when ES-DE runs it standalone | `.sav` battery save                          |
+| RMG         | Nintendo 64, when ES-DE runs it                 | N64 save files, as one zip                   |
+| DuckStation | PlayStation                                     | The game's memory card                       |
+| Azahar      | Nintendo 3DS                                    | The game's save folder, as one zip           |
+| Dolphin     | Wii                                             | The game's save folder in the NAND, as a zip |
+| Dolphin     | GameCube                                        | The game's `.gci` files, as one zip          |
+| PCSX2       | PlayStation 2                                   | The game's folders on the card, as one zip   |
+| Cemu        | Wii U                                           | The game's save folder, as one zip           |
 
 The emulator is the one ES-DE launches the game with, so changing a system's or a game's emulator in
-ES-DE changes which saves sync. Games played in other emulators, such as Dolphin, PCSX2, PPSSPP or
-Ryujinx, don't sync their saves; their page says so.
+ES-DE changes which saves sync. Games played in other emulators, such as PPSSPP or Ryujinx, don't
+sync their saves; their page says so.
+
+### How the newer systems find a game's save
+
+Each of these names a game's save by an ID inside the game's file, so the plugin reads it from
+there, and the save keeps that name on RomM whatever the game's file is called:
+
+- **3DS (Azahar)**: the title ID in a `.3ds`, `.cci` or `.cxi` file's header. The save is the
+  title's `data` folder on Azahar's SD card: the save archive and its metadata.
+- **Wii (Dolphin)**: the game ID in the disc image's header (`.rvz`, `.wia`, `.wbfs`, `.ciso` or
+  `.iso`; a `.gcz` can't be read, so convert it to `.rvz` in Dolphin). The save is the game's `data`
+  folder in Dolphin's Wii NAND.
+- **GameCube (Dolphin)**: the same game ID. The save is the game's own `.gci` files in slot A's GCI
+  folder, the card Dolphin uses unless told otherwise; other games' files there are never touched.
+- **PlayStation 2 (PCSX2)**: the serial the disc's `SYSTEM.CNF` boots (`.iso`, `.bin`, `.cue`,
+  `.chd` or a playlist). PS2 saves sync from a **folder memory card** in slot 1, where each save is
+  a folder named for the game's serial; the game's folders sync, and the card's own files and other
+  games' folders are never touched. A single-file card holds every game's saves in one file, so it
+  doesn't sync: make a Folder card in PCSX2's **Settings → Memory Cards** and put it in slot 1.
+- **Wii U (Cemu)**: the title ID of the game in a `.wua` (the base game, not its update or DLC), or
+  in a game folder's `meta/meta.xml`. The save is the game's folder in Cemu's MLC, under `usr/save`:
+  each account's saves, the common one, and the game's meta.
+
+A save from RomM that isn't the kind the emulator keeps, or that holds another game's files, is
+refused rather than written.
 
 Save states sync too, for Game Boy, Game Boy Color and Game Boy Advance games: see
 [Save states](#save-states).
@@ -150,6 +179,10 @@ paused** with what to change back:
 - **RMG**: **Save filename format** set to the cart's header name, or no save (SRAM) folder.
 - **DuckStation**: memory card 1 not **Separate Card Per Game (Title)**, or **Use Single Card For
   Multi-Disc Games** turned off.
+- **Azahar**: **Use virtual SD card** turned off.
+- **Dolphin**: slot A's memory card not a **GCI Folder**, which pauses GameCube saves only; Wii
+  saves keep syncing.
+- **PCSX2**: no memory card in slot 1, or a single-file card there rather than a folder one.
 
 When an emulator's save folder moves to another folder that exists, the plugin follows it on its
 own.
@@ -166,6 +199,12 @@ no save states folder. A game's page says which.
 - **Multi-disc PlayStation games**: DuckStation gives every disc of a game one memory card. When
   RomM keeps the discs as separate games, the card syncs with one of them, and the others' pages say
   which.
+- **Multi-disc GameCube and PS2 games**: the discs share a game ID or serial, and so a save. When
+  RomM keeps them as separate games, the save syncs with the first, and the others' pages say so. A
+  GameCube game kept as a playlist is read by its first disc.
+- **PS2 games saving under another serial**: a few games save under a serial other than the one
+  their disc boots, such as a sequel reading its predecessor's save. Only the folders named for the
+  game's own serial sync with it.
 - **Nintendo 64 in RMG**: RMG names saves from its ROM database, so RMG needs to be installed. N64
   saves from other emulators on RomM, such as RetroArch's, load in RMG too.
 - **Linked games**: sync like downloaded ones, as long as the linked file is still there.

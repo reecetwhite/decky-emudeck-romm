@@ -149,3 +149,16 @@ func TestGCRegionDir(t *testing.T) {
 		}
 	}
 }
+
+// A GameCube card problem shows Dolphin's sync as paused, saying why, though Wii saves still sync.
+func TestGCSlotAPausesDolphin(t *testing.T) {
+	f := newSaveFixture(t)
+	f.configs["dolphin-gc"] = domain.SaveConfig{Problem: "Dolphin's memory card in slot A isn't a GCI folder"}
+	f.saves = f.newSaves()
+	for _, p := range f.saves.Paused() {
+		if p.Emulator.ID == "dolphin" && strings.Contains(p.Why, "slot A") {
+			return
+		}
+	}
+	t.Fatalf("paused: %+v", f.saves.Paused())
+}
