@@ -39,7 +39,7 @@ func (e Emulator) SaveSync() bool { return len(e.SaveDirs) > 0 }
 // Emulators lists every emulator a System defaults to, and every one with save sync.
 var Emulators = []Emulator{
 	{ID: "retroarch", Name: "RetroArch", Kind: InstallFlatpak, Location: "org.libretro.RetroArch", SaveDirs: []string{"retroarch/saves", "retroarch/states"}},
-	{ID: "dolphin", Name: "Dolphin", Kind: InstallFlatpak, Location: "org.DolphinEmu.dolphin-emu"},
+	{ID: "dolphin", Name: "Dolphin", Kind: InstallFlatpak, Location: "org.DolphinEmu.dolphin-emu", SaveDirs: []string{"dolphin/Wii"}},
 	{ID: "ppsspp", Name: "PPSSPP", Kind: InstallFlatpak, Location: "org.ppsspp.PPSSPP"},
 	{ID: "melonds", Name: "melonDS", Kind: InstallFlatpak, Location: "net.kuribo64.melonDS", SaveDirs: []string{"melonds/saves", "melonds/states"}},
 	{ID: "scummvm", Name: "ScummVM", Kind: InstallFlatpak, Location: "org.scummvm.ScummVM"},

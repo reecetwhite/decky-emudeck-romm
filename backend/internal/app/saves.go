@@ -416,12 +416,14 @@ func (s *Saves) watchDirs(configs []string) []string {
 	state := s.install.State(false)
 	dirs := s.saveDirs(state)
 	for _, r := range domain.SaveRules() {
-		// The 3DS keeps each title's save folders deep under the SD card; the watch covers each.
-		if r.Kind != domain.SaveCTRTitle {
+		// The 3DS and Wii keep each title's save folder deep under the saves folder; the watch
+		// covers each.
+		deep := map[domain.SaveKind]func(string) []string{domain.SaveCTRTitle: ctrWatchDirs, domain.SaveDolphin: wiiWatchDirs}[r.Kind]
+		if deep == nil {
 			continue
 		}
 		if dir, why := s.saveDir(state, r.Emulator); why == "" {
-			for _, d := range ctrWatchDirs(dir) {
+			for _, d := range deep(dir) {
 				if !slices.Contains(dirs, d) {
 					dirs = append(dirs, d)
 				}

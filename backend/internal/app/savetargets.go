@@ -200,7 +200,14 @@ func (s *Saves) resolve(ctx context.Context, id int, shared bool) (saveTarget, s
 			return saveTarget{}, why, nil
 		}
 		// RomM keeps the data folder as one zip, named for the title.
-		t.path, t.format = filepath.Join(title, domain.CTRSaveName(id)), ctrSave{title: title}
+		t.path, t.format = filepath.Join(title, domain.CTRSaveName(id)), ctrSave(title)
+		return t, "", nil
+	case domain.SaveDolphin:
+		path, format, why := s.dolphinTarget(entry, system.Folder, saves)
+		if why != "" {
+			return saveTarget{}, why, nil
+		}
+		t.path, t.format = path, format
 		return t, "", nil
 	case domain.SaveN64Files:
 		base, why := s.n64Base(entry, saves)

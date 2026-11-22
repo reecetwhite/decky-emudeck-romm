@@ -27,6 +27,7 @@ const (
 	mGBAConfig      = ".config/mgba/config.ini"
 	rmgConfig       = ".var/app/com.github.Rosalie241.RMG/config/RMG/mupen64plus.cfg"
 	azaharConfig    = ".config/azahar-emu/qt-config.ini"
+	dolphinConfig   = ".var/app/org.DolphinEmu.dolphin-emu/config/dolphin-emu/Dolphin.ini"
 	// azaharSDMC is where Azahar keeps its SD card when its settings don't name another.
 	azaharSDMC = ".local/share/azahar-emu/sdmc"
 )
@@ -41,6 +42,7 @@ func (c *SaveConfigs) Files() []string {
 		filepath.Join(c.home, rmgConfig),
 		filepath.Join(c.home, duckStationData, "settings.ini"),
 		filepath.Join(c.home, azaharConfig),
+		filepath.Join(c.home, dolphinConfig),
 	}
 }
 
@@ -145,6 +147,11 @@ func (c *SaveConfigs) SaveConfig(id string) domain.SaveConfig {
 			}
 		}
 		return c.follow("Azahar", "saves", dir, "")
+	case "dolphin":
+		// Dolphin keeps the Wii NAND, and so Wii saves, in its user folder unless told otherwise.
+		if dir := unquote(readINI(filepath.Join(c.home, dolphinConfig))["General"]["NANDRootPath"]); dir != "" {
+			return c.follow("Dolphin", "Wii NAND", dir, "")
+		}
 	}
 	return domain.SaveConfig{}
 }

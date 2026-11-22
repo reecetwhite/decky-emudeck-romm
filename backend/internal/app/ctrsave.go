@@ -30,26 +30,39 @@ func formatOwns(f saveFormat, path string) bool {
 // partSuffix marks a file writeAtomic hasn't finished writing.
 const partSuffix = ".romm-part"
 
-// ctrSave is a 3DS game's save as Azahar keeps it on its SD card: every file in the title's data
-// folder, the save archive in data/00000001/ and its metadata beside it. On RomM it's a zip of the
-// data folder.
-type ctrSave struct {
-	// title is the title's folder, which holds data.
+// titleSave is a save kept as a folder of files inside a title's folder, as Azahar keeps a 3DS
+// game's and Dolphin a Wii game's: every file in the data folder. On RomM it's a zip of the data
+// folder.
+type titleSave struct {
+	// title is the title's folder, which holds data. The emulator makes it, and other folders in it,
+	// before the game first saves.
 	title string
+	// data is the folder the save is kept in.
+	data string
+	// emulator is the name of the emulator that keeps the save.
+	emulator string
+	// valid says whether a folder's files hold a save the game wrote, and missing what one that
+	// doesn't lacks.
+	valid   func(members map[string][]byte) bool
+	missing string
 }
 
-func (c ctrSave) data() string { return filepath.Join(c.title, "data") }
+// ctrSave is a 3DS game's save as Azahar keeps it on its SD card: the save archive in
+// data/00000001/ and its metadata beside it.
+func ctrSave(title string) titleSave {
+	return titleSave{title: title, data: filepath.Join(title, "data"), emulator: "Azahar", valid: ctrArchive, missing: "no 3DS save archive (00000001/)"}
+}
 
-// owns is any file in the title's folder, and the folder itself as Azahar first makes it: the save
-// it then writes may land in folders the watch doesn't cover yet.
-func (c ctrSave) owns(path string) bool {
+// owns is any file in the title's folder, and the folder itself as the emulator first makes it: the
+// save it then writes may land in folders the watch doesn't cover yet.
+func (c titleSave) owns(path string) bool {
 	return path == c.title || strings.HasPrefix(path, c.title+string(filepath.Separator))
 }
 
 // files are the save's files in the data folder, by their full path.
-func (c ctrSave) files() []string {
+func (c titleSave) files() []string {
 	var out []string
-	_ = filepath.WalkDir(c.data(), func(path string, d fs.DirEntry, err error) error {
+	_ = filepath.WalkDir(c.data, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil //nolint:nilerr // a folder that isn't there holds no save
 		}
@@ -61,7 +74,7 @@ func (c ctrSave) files() []string {
 	return out
 }
 
-func (c ctrSave) read() (localSave, error) {
+func (c titleSave) read() (localSave, error) {
 	members := map[string][]byte{}
 	var mod time.Time
 	for _, path := range c.files() {
@@ -76,7 +89,7 @@ func (c ctrSave) read() (localSave, error) {
 		if err != nil {
 			return localSave{}, err
 		}
-		rel, err := filepath.Rel(c.data(), path)
+		rel, err := filepath.Rel(c.data, path)
 		if err != nil {
 			return localSave{}, err
 		}
@@ -85,8 +98,8 @@ func (c ctrSave) read() (localSave, error) {
 			mod = info.ModTime().UTC()
 		}
 	}
-	if !ctrArchive(members) {
-		// Azahar makes the folder before the game formats its save; until then there's none.
+	if !c.valid(members) {
+		// The emulator makes the folder before the game first saves; until then there's none.
 		return localSave{}, nil
 	}
 	unit := domain.FolderUnit(members)
@@ -94,24 +107,24 @@ func (c ctrSave) read() (localSave, error) {
 }
 
 // write replaces the data folder's files with the save's: the files it holds are written, and the
-// folder's others removed, so the save archive is the one RomM keeps and nothing of the old one is
-// left in it.
-func (c ctrSave) write(data []byte) error {
+// folder's others removed, so the save is the one RomM keeps and nothing of the old one is left in
+// it.
+func (c titleSave) write(data []byte) error {
 	members, err := domain.ParseFolderUnit(data)
 	if err != nil {
-		return fmt.Errorf("%w, so Azahar can't use it", err)
+		return fmt.Errorf("%w, so %s can't use it", err, c.emulator)
 	}
-	if !ctrArchive(members) {
-		return errors.New("RomM's save holds no 3DS save archive (00000001/), so Azahar can't use it")
+	if !c.valid(members) {
+		return fmt.Errorf("RomM's save holds %s, so %s can't use it", c.missing, c.emulator)
 	}
 	old := c.files()
 	for name, member := range members {
-		if err := writeAtomic(filepath.Join(c.data(), filepath.FromSlash(name)), member); err != nil {
+		if err := writeAtomic(filepath.Join(c.data, filepath.FromSlash(name)), member); err != nil {
 			return err
 		}
 	}
 	for _, path := range old {
-		rel, err := filepath.Rel(c.data(), path)
+		rel, err := filepath.Rel(c.data, path)
 		if err != nil {
 			continue
 		}

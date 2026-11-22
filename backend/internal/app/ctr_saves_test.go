@@ -135,7 +135,7 @@ func TestCTRSaveOwnsItsFolder(t *testing.T) {
 	f := newSaveFixture(t)
 	data := f.ctrGame(t)
 	title := filepath.Dir(data)
-	c := ctrSave{title: title}
+	c := ctrSave(title)
 	for _, path := range []string{title, filepath.Join(data, "00000001", "GameData.bin"), filepath.Join(data, "00000001.metadata")} {
 		if !formatOwns(c, path) {
 			t.Errorf("%s isn't the game's", path)

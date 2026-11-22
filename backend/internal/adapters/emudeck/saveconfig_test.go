@@ -245,3 +245,20 @@ func TestAzaharSDCard(t *testing.T) {
 		})
 	}
 }
+
+// Dolphin's Wii NAND is in its user folder, EmuDeck's saves folder standing for it, unless its
+// settings move it.
+func TestDolphinNAND(t *testing.T) {
+	home := t.TempDir()
+	if got := NewSaveConfigs(home).SaveConfig("dolphin"); got != (domain.SaveConfig{}) {
+		t.Fatalf("no settings: %+v", got)
+	}
+	nand := filepath.Join(home, "nand")
+	if err := os.MkdirAll(nand, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	put(t, filepath.Join(home, dolphinConfig), "[General]\nNANDRootPath = "+nand+"\n")
+	if got := NewSaveConfigs(home).SaveConfig("dolphin"); got.Dir != nand {
+		t.Fatalf("moved NAND: %+v", got)
+	}
+}

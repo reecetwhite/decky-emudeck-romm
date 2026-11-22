@@ -29,6 +29,9 @@ const (
 	// SaveCTRTitle is a 3DS game's save folder on Azahar's SD card, found by the title ID in the
 	// game's header, kept on RomM as a zip of the folder.
 	SaveCTRTitle
+	// SaveDolphin is a save Dolphin keeps, by the game ID in the disc's header: a Wii game's save
+	// folder in the NAND, kept on RomM as a zip of the folder.
+	SaveDolphin
 )
 
 // SaveRule is how an emulator whose saves sync names them and tags them on RomM. Each keeps a game's
@@ -77,6 +80,9 @@ var saveRules = func() []SaveRule {
 		}),
 		rule("azahar", SaveRule{
 			Kind: SaveCTRTitle, Tag: "azahar", esdeVar: "%EMULATOR_AZAHAR%", label: "Azahar (Standalone)", script: "azahar.sh",
+		}),
+		rule("dolphin", SaveRule{
+			Kind: SaveDolphin, Tag: "dolphin", esdeVar: "%EMULATOR_DOLPHIN%", label: "Dolphin (Standalone)", script: "dolphin-emu.sh",
 		}),
 	}
 }()
